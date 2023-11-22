@@ -1,1 +1,1 @@
-Hey y'all!
+Use `npm start` or `npm run dev` to start the server.
