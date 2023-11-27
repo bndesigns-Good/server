@@ -10,8 +10,8 @@ const PORT = process.env.PORT || 8000;
 //
 // Controllers/models
 //
-const getOfferings = (req, res) => {
-    pool.query('SELECT * FROM offerings', (error, selection) => {
+const getOffers = (req, res) => {
+    pool.query('SELECT * FROM offers', (error, selection) => {
         if (error) {
             throw error
         }
@@ -19,26 +19,36 @@ const getOfferings = (req, res) => {
     })
 }
 
-const createOffering = (req, res) => {
-    const offeringData = req.body;
-    const queryString = `INSERT INTO offerings (title, category, price, offeree_id) VALUES ('${offeringData.title}', '${offeringData.category}', ${offeringData.price}, '${offeringData.offeree_id}')`;
-    pool.query(queryString, (error, newOffering) => {
+const getOffersWithUsers = (req, res) => {
+    const queryString = `SELECT id, user_id FROM offers`;
+    pool.query(queryString, (error, selection) => {
+        if (error) {
+            throw error
+        }
+        res.send(selection.rows)
+    })
+}
+
+const createOffer = (req, res) => {
+    const offerData = req.body;
+    const queryString = `INSERT INTO offers (title, category, price, user_id) VALUES ('${offerData.title}', '${offerData.category}', ${offerData.price}, '${offerData.user_id}')`;
+    pool.query(queryString, (error, newOffer) => {
             if (error) {
                 throw error
             }
-            res.send(newOffering)
+            res.send(newOffer)
         }
     )
 }
 
-const deleteOffering = (req, res) => {
-    const offeringId = req.params.id;
-    const queryString = `DELETE FROM offerings WHERE id=${offeringId}`;
-    pool.query(queryString, (error, deletedOffering) => {
+const deleteOffer = (req, res) => {
+    const offerId = req.params.id;
+    const queryString = `DELETE FROM offers WHERE id=${offerId}`;
+    pool.query(queryString, (error, deletedOffer) => {
         if (error) {
             throw error
         }
-        res.send(deletedOffering)
+        res.send(deletedOffer)
     })
 }
 
@@ -64,9 +74,10 @@ app.get("/", (req, res) => {
     res.send("Hello world!");
 })
 
-app.get('/offerings', getOfferings)
-app.post('/offerings', createOffering)
-app.delete('/offerings/:id', deleteOffering)
+app.get('/offers', getOffers)
+app.get('/offerusers', getOffersWithUsers)
+app.post('/offers', createOffer)
+app.delete('/offers/:id', deleteOffer)
 
 app.get('/user/:id', getUser)
 
@@ -76,4 +87,4 @@ app.get('/message', (req, res) => {
 
 app.listen(8000, () => {
     console.log(`Server is running on port 8000.`);
-  });
+});
