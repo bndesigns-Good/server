@@ -10,12 +10,29 @@ const PORT = process.env.PORT || 8000;
 //
 // Controllers/models
 //
+const login = (req, res) => {
+    const loginData = req.body;
+    const queryString = `SELECT id, email, password FROM users WHERE email='${loginData.email}' AND password='${loginData.password}'`
+    pool.query(queryString, (error, selection) => {
+        if (error) {
+            throw error
+        }
+        if (selection.rows.length == 1) {
+            res.status(200).send({token: "userAuthenticated", id: selection.rows[0].id})
+        } else if (selection.rows.length > 1) {
+            res.status(500).send("This email-password pair references more than one user in our database...")
+        } else {
+            res.status(500).send("This email-password pair doesn't exist in our database.")
+        }
+    })
+}
+
 const getOffers = (req, res) => {
     pool.query('SELECT * FROM offers', (error, selection) => {
         if (error) {
             throw error
         }
-        res.status(200).json(selection.rows)
+        res.status(200).send(selection.rows)
     })
 }
 
@@ -52,6 +69,15 @@ const deleteOffer = (req, res) => {
     })
 }
 
+const getUsers = (req, res) => {
+    pool.query('SELECT * FROM users', (error, selection) => {
+        if (error) {
+            throw error
+        }
+        res.status(200).json(selection.rows)
+    })
+}
+
 const getUser = (req, res) => {
     const userId = req.params.id;
     const queryString = `SELECT * FROM users WHERE id=${userId}`;
@@ -64,26 +90,33 @@ const getUser = (req, res) => {
     })
 }
 
+const createUser = (req, res) => {
+    const userData = req.body;
+    const queryString = `INSERT INTO users (email, password, name) VALUES ('${userData.email}', '${userData.password}', '${userData.name}')`;
+    pool.query(queryString, (error, newUser) => {
+        if (error) {
+            throw error
+        }
+        res.send(newUser)
+    })
+}
+
 app.use(cors());
 app.use(express.json());
 
 //
 // Routes
 //
-app.get("/", (req, res) => {
-    res.send("Hello world!");
-})
+app.post('/login', login)
 
 app.get('/offers', getOffers)
 app.get('/offerusers', getOffersWithUsers)
-app.post('/offers', createOffer)
-app.delete('/offers/:id', deleteOffer)
+app.post('/offer', createOffer)
+app.delete('/offer/:id', deleteOffer)
 
+app.get('/users', getUsers)
 app.get('/user/:id', getUser)
-
-app.get('/message', (req, res) => {
-    res.json({ message: "Hello from server!" });
-});
+app.post('/user', createUser)
 
 app.listen(8000, () => {
     console.log(`Server is running on port 8000.`);
