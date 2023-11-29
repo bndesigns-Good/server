@@ -101,7 +101,7 @@ const getUser = (req, res) => {
     })
 }
 
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
     const userId = req.params.id;
     const userData = req.body;
     // Check to see which data need to be updated
@@ -109,13 +109,18 @@ const updateUser = (req, res) => {
     const incomingData = [userData.name, userData.pronouns, userData.bio]
     let dataString = ""
     for (let i = 0; i < 3; i++) {
+        // Concatenate all the incoming data into a SQL-friendly string:
+        // Replace accidental double apostrophes with single ones
+        // Then, escape all the single apostrophes by replacing them with double ones
+        // This ensures the string is SQL-friendly
         if (dataString == "" && incomingData[i] != "") {
-            dataString = dataString + incomingFields[i] + " = '" + incomingData[i] + "'"
+            dataString = dataString + incomingFields[i] + " = '" + incomingData[i].replace("''", "'").replace("'", "''") + "'"
         } else if (dataString != "" && incomingData[i] != "") {
-            dataString = dataString + ", " + incomingFields[i] + " = '" + incomingData[i] + "'"
+            dataString = dataString + ", " + incomingFields[i] + " = '" + incomingData[i].replace("''", "'").replace("'", "''") + "'"
         }
     }
     const queryString = `UPDATE users SET ${dataString} WHERE id = ${userId};`
+    console.log(queryString)
     pool.query(queryString, (error, updatedUser) => {
         if (error) {
             throw error
