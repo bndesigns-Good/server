@@ -1,11 +1,46 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 const express = require('express');
+const cloudinary = require("cloudinary").v2;
 const cors = require('cors');
+const Multer = require("multer");
 const pool = require(__dirname + "/config/db.config.js");
 
 const app = express();
 
 const PORT = process.env.PORT || 8000;
+
+// Cloudinary upload code
+cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET,
+});
+
+async function handleUpload(file) {
+    const res = await cloudinary.uploader.upload(file, {
+        resource_type: "auto",
+    });
+    return res;
+}
+
+const storage = new Multer.memoryStorage();
+const upload = Multer({
+  storage,
+});
+
+app.post("/upload", upload.single("my_file"), async (req, res) => {
+    try {
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+      let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+      const cldRes = await handleUpload(dataURI);
+      res.json(cldRes);
+    } catch (error) {
+      console.log(error);
+      res.send({
+        message: error.message,
+      });
+    }
+  });
 
 //
 // Controllers/models
@@ -120,14 +155,26 @@ const updateUser = (req, res, next) => {
         }
     }
     const queryString = `UPDATE users SET ${dataString} WHERE id = ${userId};`
-    console.log(queryString)
+    // console.log(queryString)
+    pool.query(queryString, (error, updatedUser) => {
+        if (error) {
+            throw error
+        }
+        res.status(200).send(updatedUser)
+    })  
+}
+
+const setUserPP = (req, res) => {
+    const userId = req.params.id
+    const ppUrl = req.body.url
+    const queryString = `UPDATE users SET pp_url = '${ppUrl}' WHERE id = ${userId}`
+    // console.log(queryString)
     pool.query(queryString, (error, updatedUser) => {
         if (error) {
             throw error
         }
         res.status(200).send(updatedUser)
     })
-    
 }
 
 const createUser = (req, res) => {
@@ -159,6 +206,8 @@ app.get('/users', getUsers)
 app.get('/user/:id', getUser)
 app.patch('/user/:id', updateUser)
 app.post('/user', createUser)
+
+app.patch('/image/:id', setUserPP)
 
 app.listen(8000, () => {
     console.log(`Server is running on port 8000.`);
