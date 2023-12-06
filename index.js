@@ -94,7 +94,11 @@ const getOffersWithUsers = (req, res) => {
 
 const createOffer = (req, res) => {
     const offerData = req.body;
-    const queryString = `INSERT INTO offers (title, category, price, user_id) VALUES ('${offerData.title}', '${offerData.category}', ${offerData.price}, '${offerData.user_id}');`
+    const processedTitle = offerData.title.replaceAll("''", "'").replaceAll("'", "''");
+    const processedDescription = offerData.description.replaceAll("''", "'").replaceAll("'", "''");
+    console.log(processedDescription);
+    const queryString = `INSERT INTO offers (title, category, price, description, user_id) VALUES ('${processedTitle}', '${offerData.category}', ${offerData.price}, '${processedDescription}', '${offerData.user_id}');`
+    console.log(queryString);
     pool.query(queryString, (error, newOffer) => {
             if (error) {
                 throw error
@@ -149,9 +153,9 @@ const updateUser = (req, res, next) => {
         // Then, escape all the single apostrophes by replacing them with double ones
         // This ensures the string is SQL-friendly
         if (dataString == "" && incomingData[i] != "") {
-            dataString = dataString + incomingFields[i] + " = '" + incomingData[i].replace("''", "'").replace("'", "''") + "'"
+            dataString = dataString + incomingFields[i] + " = '" + incomingData[i].replaceAll("''", "'").replaceAll("'", "''") + "'"
         } else if (dataString != "" && incomingData[i] != "") {
-            dataString = dataString + ", " + incomingFields[i] + " = '" + incomingData[i].replace("''", "'").replace("'", "''") + "'"
+            dataString = dataString + ", " + incomingFields[i] + " = '" + incomingData[i].replaceAll("''", "'").replaceAll("'", "''") + "'"
         }
     }
     const queryString = `UPDATE users SET ${dataString} WHERE id = ${userId};`
