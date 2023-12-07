@@ -166,7 +166,7 @@ exports.uploadImage = async (req, res) => {
 exports.setUserImage = (req, res) => {
     const userId = req.params.id
     const ppUrl = req.body.url
-    const queryString = `UPDATE users SET pp_url = '${ppUrl}' WHERE id = ${userId}`
+    const queryString = `UPDATE users SET photo_url = '${ppUrl}' WHERE id = ${userId}`
     // console.log(queryString)
     pool.query(queryString, (error, updatedUser) => {
         if (error) {
