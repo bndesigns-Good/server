@@ -4,6 +4,10 @@ const Multer = require("multer");
 
 const app = express();
 
+app.get('/test', (req, res) => {
+  res.json({ message: "Hello from the server!" });
+})
+
 app.post('/login', controller.logIn)
 
 app.get('/offers', controller.getOffers)
